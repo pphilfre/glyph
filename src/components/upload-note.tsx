@@ -29,7 +29,7 @@ export function UploadNote() {
     setError(''); setFilename(file.name); setStage('uploading');
     const fail = (message: string) => { setError(message); setStage('idle'); inFlight.current = false; };
     let token: string | null;
-    try { token = await getToken({ template: 'convex' }); }
+    try { token = await getToken(); }
     catch { fail('Sign-in could not be verified. Please try again.'); return; }
     if (!token) { fail('Sign in to upload a note.'); return; }
     const siteUrl = process.env.NEXT_PUBLIC_CONVEX_SITE_URL;

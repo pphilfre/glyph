@@ -14,7 +14,7 @@ There is one application and one Convex backend. No SQL database, object-storage
 
 1. Install Node.js 24 and pnpm, then run `pnpm install --frozen-lockfile`.
 2. Copy `.env.example` to `.env.local`. Add your Clerk publishable and secret keys.
-3. In the Clerk dashboard, enable the **Convex integration**. It provides the `convex` token with audience `convex`. Copy the Clerk Frontend API URL (issuer). See the [official Clerk + Convex guide](https://docs.convex.dev/auth/clerk).
+3. In the Clerk dashboard, enable the **Convex integration** for the matching development or production instance. It adds `aud: "convex"` to the normal session token; no named JWT template is needed. Glyph's server reads and HTTP uploads use `getToken()` without a template, and `ConvexProviderWithClerk` detects the session audience for reactive requests. Copy the Clerk Frontend API URL (issuer). See the [official Clerk + Convex guide](https://docs.convex.dev/auth/clerk).
 4. Run `pnpm exec convex dev`, sign in to Convex, and create/select a development project. The CLI writes `CONVEX_DEPLOYMENT` and `NEXT_PUBLIC_CONVEX_URL`. If the initial push reports a missing issuer, leave it running while completing the next step.
 5. Set the issuer **on the Convex deployment**, using another terminal:
    `pnpm exec convex env set CLERK_JWT_ISSUER_DOMAIN https://your-app.clerk.accounts.dev`.

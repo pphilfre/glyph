@@ -16,7 +16,9 @@ export async function requireUser() {
 
 export async function requireConvexToken() {
   await requireUser();
-  const token = await (await auth()).getToken({ template: 'convex' });
+  // Clerk's Convex integration adds aud: "convex" to the session token.
+  // Requesting a named template instead hits a separate, unconfigured endpoint.
+  const token = await (await auth()).getToken();
   if (!token) throw new Error('Clerk could not authenticate with Convex. Check the Clerk Convex integration.');
   return token;
 }
