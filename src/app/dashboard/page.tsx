@@ -9,6 +9,9 @@ export default async function DashboardPage({ searchParams }: PageProps<'/dashbo
   await requireUser();
   let notes: NoteSummary[] = [];
   let error = false;
-  try { notes = await fetchQuery(api.notes.list, {}, { token: await requireConvexToken() }); } catch { error = true; }
+  try { notes = await fetchQuery(api.notes.list, {}, { token: await requireConvexToken() }); } catch (cause) {
+    console.error('Failed to load dashboard notes', cause);
+    error = true;
+  }
   return <Shell signedIn active="notes"><NotesDashboard notes={notes} loadError={error} showUpload={(await searchParams).upload === '1'} /></Shell>;
 }
