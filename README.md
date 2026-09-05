@@ -40,7 +40,11 @@ The upload endpoint uses bearer authentication, with CORS allowing explicit Auth
 
 ## Note format
 
-Upload one UTF-8 `.md`, `.markdown`, `.mtex`, or `.mathtex` file, up to 2 MB. MathTeX uses the same Markdown syntax; a file beginning with a bare LaTeX math command and containing no dollar delimiters is treated as one display equation.
+Upload one UTF-8 `.md`, `.markdown`, `.mtex`, `.mathtex`, or `.tex` file, up to 2 MB. MathTeX uses the same Markdown syntax; a file beginning with a bare LaTeX math command and containing no dollar delimiters is treated as one display equation.
+
+LaTeX `.tex` imports are converted on the server and saved as `.md` notes before opening the private preview. The converter supports titles, section headings, paragraphs, bold/italic text, lists (including nested lists), quotes, inline code/verbatim blocks, links, footnotes as parenthetical text, and inline/display equations including equation, align and gather environments. Both the uploaded file and converted note must fit within 2 MB. Malformed groups/environments or excessive nesting return a helpful error without storing a note.
+
+Review the preview after conversion. Unsupported commands and environments (including tables, TikZ, custom macro definitions and references) are preserved as source with a conversion notice. Packages are not loaded, macros are not expanded, external files are not fetched, and document layout and automatic equation numbering are not reproduced. Keep your original `.tex` file for editing or compiling to PDF.
 
 ~~~md
 # Mechanics
@@ -64,7 +68,7 @@ Therefore the kinetic energy increases by a **factor of four**.
 
 Headings, paragraphs, emphasis, lists, links, tables, blockquotes, inline/fenced code, and inline/display maths are supported. The first level-one heading becomes the note title. The reader includes heading navigation, code copying, accessible MathML, and print styles.
 
-Raw HTML is discarded and the Markdown HTML tree is sanitised before KaTeX adds its own trusted markup. KaTeX runs with `trust: false` and expansion/size limits. Full `.tex` documents, TeX packages, TikZ, and TeX engines are outside the format. Notes are self-contained; there is no separate asset upload workflow.
+Raw HTML is discarded and the Markdown HTML tree is sanitised before KaTeX adds its own trusted markup. KaTeX runs with `trust: false` and expansion/size limits. LaTeX import converts text without running a TeX engine or shell commands. Notes are self-contained; there is no separate asset upload workflow.
 
 ## Verification
 

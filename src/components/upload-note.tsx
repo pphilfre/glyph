@@ -23,7 +23,7 @@ export function UploadNote() {
     if (inFlight.current) return;
     if (!isAuthenticated) { setError('Sign in to upload a note.'); return; }
     if (!NOTE_EXTENSIONS.test(file.name) || !file.size || file.size > MAX_NOTE_BYTES) {
-      setError('Choose a non-empty .md, .markdown, .mtex or .mathtex file up to 2 MB.'); return;
+      setError('Choose a non-empty .md, .markdown, .mtex, .mathtex or .tex file up to 2 MB.'); return;
     }
     inFlight.current = true;
     setError(''); setFilename(file.name); setStage('uploading');
@@ -61,11 +61,11 @@ export function UploadNote() {
       onDrop={event => { event.preventDefault(); dragDepth.current = 0; setDragging(false); if (event.dataTransfer.files.length !== 1) { setError('Upload one note at a time.'); return; } void upload(event.dataTransfer.files[0]); }} aria-busy={busy}>
       <span className="upload-symbol">{busy ? <LoaderCircle className="spin" size={26} /> : <FileUp size={26} strokeWidth={1.5} />}</span>
       <strong aria-live="polite">{stage === 'uploading' ? 'Uploading your note…' : stage === 'saving' ? 'Saving your note…' : stage === 'ready' ? 'Opening your preview…' : 'Drop your note here'}</strong>
-      <span>{busy ? filename : 'Markdown or MathTeX, up to 2 MB'}</span>
+      <span>{busy ? filename : 'Markdown, MathTeX or LaTeX (.tex), up to 2 MB'}</span>
       {busy ? <div className="processing-line"><span /></div> : <button disabled={!isAuthenticated} className="button primary" onClick={() => input.current?.click()}>{isLoading ? 'Connecting…' : 'Choose a file'} <ArrowUpRight size={16} /></button>}
-      <small>{busy ? 'Your private preview will open next.' : 'Use Markdown with $inline$ or $$display$$ maths.'}</small>
+      <small>{busy ? 'Your private preview will open next.' : 'LaTeX files are converted into notes. Review any conversion notices in your preview.'}</small>
       {!isLoading && !isAuthenticated && <p role="alert">Your sign-in could not be verified. Reload the page to reconnect.</p>}
-      <input ref={input} type="file" tabIndex={-1} accept=".md,.markdown,.mtex,.mathtex" aria-label="Choose a Markdown or MathTeX note" className="visually-hidden" disabled={busy || !isAuthenticated} onChange={event => { const file = event.target.files?.[0]; if (file) void upload(file); event.target.value = ''; }} />
+      <input ref={input} type="file" tabIndex={-1} accept=".md,.markdown,.mtex,.mathtex,.tex" aria-label="Choose a Markdown, MathTeX or LaTeX note" className="visually-hidden" disabled={busy || !isAuthenticated} onChange={event => { const file = event.target.files?.[0]; if (file) void upload(file); event.target.value = ''; }} />
     </div>
     {error && <p className="inline-error" role="alert"><AlertCircle size={17} />{error}</p>}
   </div>;

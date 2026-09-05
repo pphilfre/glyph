@@ -13,7 +13,7 @@ export default async function HomePage() {
       <Link href="/sign-in" className="upload-invitation">
         <span className="upload-symbol"><FileUp size={26} strokeWidth={1.5} /></span>
         <strong>Bring your notes to Glyph</strong>
-        <span>Markdown with maths, up to 2 MB</span>
+        <span>Markdown or LaTeX notes, up to 2 MB</span>
         <span className="button primary">Sign in to upload <ArrowUpRight size={16} /></span>
         <small>Your notes stay private until you publish.</small>
       </Link>

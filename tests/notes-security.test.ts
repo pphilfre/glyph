@@ -99,7 +99,7 @@ describe('authenticated file uploads', () => {
     const t = backend();
     const owner = t.withIdentity({ subject: 'owner' });
     const cases: [string, BodyInit][] = [
-      ['note.exe', '# Note'], ['note.tex', '# Note'], ['../note.md', '# Note'],
+      ['note.exe', '# Note'], ['../note.md', '# Note'],
       ['a'.repeat(241) + '.md', '# Note'], ['empty.md', '  '], ['binary.md', '\u0000'],
       ['broken.md', new Uint8Array([0xc3, 0x28])],
       ['full.mathtex', '\\documentclass{article}\\begin{document}test\\end{document}'],

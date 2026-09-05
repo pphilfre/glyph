@@ -2,6 +2,7 @@ import { httpRouter } from 'convex/server';
 import { httpAction } from './_generated/server';
 import { internal } from './_generated/api';
 import { MAX_NOTE_BYTES, NOTE_EXTENSIONS, validateSource, sourceTitle } from '../src/lib/note-source';
+import { convertLatex } from '../src/lib/latex-import';
 
 // Requests use explicit bearer tokens, never ambient cookies.
 const cors = {
@@ -14,9 +15,9 @@ const json = (body: unknown, status: number) => Response.json(body, { status, he
 
 export const upload = httpAction(async (ctx, request) => {
   if (!await ctx.auth.getUserIdentity()) return json({ error: 'Sign in before uploading a note.' }, 401);
-  const filename = new URL(request.url).searchParams.get('filename') ?? '';
+  let filename = new URL(request.url).searchParams.get('filename') ?? '';
   if (!NOTE_EXTENSIONS.test(filename) || filename.length > 240 || /[/\\\u0000-\u001f]/.test(filename)) {
-    return json({ error: 'Choose a .md, .markdown, .mtex or .mathtex file.' }, 400);
+    return json({ error: 'Choose a .md, .markdown, .mtex, .mathtex or .tex file.' }, 400);
   }
   const reader = request.body?.getReader();
   if (!reader) return json({ error: 'Choose a non-empty note file.' }, 400);
@@ -32,10 +33,16 @@ export const upload = httpAction(async (ctx, request) => {
     }
     chunks.push(new Uint8Array(value));
   }
-  const blob = new Blob(chunks, { type: 'text/plain;charset=utf-8' });
+  let blob = new Blob(chunks, { type: 'text/plain;charset=utf-8' });
   let source: string;
   try {
     source = new TextDecoder('utf-8', { fatal: true }).decode(await blob.arrayBuffer());
+    if (/\.tex$/i.test(filename)) {
+      source = convertLatex(source).source;
+      filename = filename.replace(/\.tex$/i, '.md');
+      blob = new Blob([source], { type: 'text/plain;charset=utf-8' });
+      if (blob.size > MAX_NOTE_BYTES) return json({ error: 'The converted note exceeds 2 MB. Split the TeX file into smaller notes.' }, 413);
+    }
     validateSource(source);
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : 'Choose a UTF-8 text note.' }, 400);
