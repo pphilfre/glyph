@@ -28,5 +28,7 @@ describe('dashboard upload availability', () => {
     const html = renderToStaticMarkup(createElement(NotesDashboard, { notes: [], loadError: false, showUpload: false }));
     expect(html).toContain('data-testid="upload"');
     expect(html).not.toContain('Your notes couldn’t be loaded');
+    expect(html).toContain('href="/notes/new"');
+    expect(html).toContain('Create note');
   });
 });

@@ -11,6 +11,9 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@blocknote/core": "^0.54.0",
+    "@blocknote/mantine": "^0.54.0",
+    "@blocknote/react": "^0.54.0",
     "@clerk/nextjs": "^7.9.1",
     "convex": "^1.45.0",
     "github-slugger": "^2.0.0",
@@ -40,6 +43,7 @@
     "convex-test": "^0.0.56",
     "eslint": "^9.39.4",
     "eslint-config-next": "16.3.3",
+    "jsdom": "^30.0.1",
     "postcss": "^8.5.26",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",

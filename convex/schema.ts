@@ -8,6 +8,7 @@ export default defineSchema({
     slug: v.string(),
     filename: v.string(),
     sourceStorageId: v.id('_storage'),
+    editorStorageId: v.optional(v.id('_storage')),
     published: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),

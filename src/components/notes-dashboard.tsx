@@ -16,7 +16,7 @@ export function NotesDashboard({ notes, loadError, showUpload }: { notes: NoteSu
     <header className="topbar"><Link href="/dashboard" className="wordmark">Glyph</Link><span className="subtle">Your workspace</span></header>
     <main id="main-content" className="workspace">
       <div className="workspace-heading"><div><h1>Your notes</h1><p>{notes.length ? 'A little knowledge, ready to go further.' : 'Your next idea deserves a good home.'}</p></div>
-        {(notes.length > 0 || loadError) && <button className={`button ${upload ? '' : 'primary'}`} onClick={() => { setUploadOpen(!upload); if (showUpload) router.replace('/dashboard'); }}>{upload ? <X size={16} /> : <Plus size={16} />}{upload ? 'Close upload' : 'Upload note'}</button>}
+        <div className="workspace-actions"><Link href="/notes/new" className="button primary"><Plus size={16} />Create note</Link>{(notes.length > 0 || loadError) && <button className="button" onClick={() => { setUploadOpen(!upload); if (showUpload) router.replace('/dashboard'); }}>{upload ? <X size={16} /> : <Plus size={16} />}{upload ? 'Close upload' : 'Upload note'}</button>}</div>
       </div>
       {upload && <UploadNote />}
       {loadError ? <div className="state-message" role="alert"><h2>Your notes couldn’t be loaded</h2><p>They’re still yours. Try again in a moment.</p><button className="button" onClick={() => router.refresh()}>Try again</button></div> : <>

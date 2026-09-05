@@ -2,6 +2,8 @@ import { ConvexError, v } from 'convex/values';
 import { action, internalMutation, internalQuery, mutation, query, type QueryCtx } from './_generated/server';
 import { internal } from './_generated/api';
 import type { Doc } from './_generated/dataModel';
+import { MAX_NOTE_BYTES, sourceTitle, validateSource } from '../src/lib/note-source';
+import { validSlug } from '../src/lib/publish-url';
 
 async function requireOwner(ctx: Pick<QueryCtx, 'auth'>) {
   const identity = await ctx.auth.getUserIdentity();
@@ -67,10 +69,15 @@ export const create = internalMutation({
 });
 
 export const setPublished = mutation({
-  args: { id: v.id('notes'), published: v.boolean() },
-  handler: async (ctx, { id, published }) => {
-    if (!await owned(ctx, id)) throw new ConvexError('Note not found.');
-    await ctx.db.patch('notes', id, { published, updatedAt: Date.now() });
+  args: { id: v.id('notes'), published: v.boolean(), slug: v.optional(v.string()) },
+  handler: async (ctx, { id, published, slug }) => {
+    const note = await owned(ctx, id);
+    if (!note) throw new ConvexError('Note not found.');
+    const nextSlug = slug ?? note.slug;
+    if (!validSlug(nextSlug)) throw new ConvexError('Use 3–64 lowercase letters, numbers and single hyphens. The URL “test” is reserved.');
+    const existing = await ctx.db.query('notes').withIndex('by_slug', q => q.eq('slug', nextSlug)).unique();
+    if (existing && existing._id !== id) throw new ConvexError('This URL is already taken. Choose another.');
+    await ctx.db.patch('notes', id, { published, slug: nextSlug, updatedAt: Math.max(Date.now(), note.updatedAt + 1) });
   },
 });
 
@@ -80,6 +87,7 @@ export const remove = mutation({
     const note = await owned(ctx, id);
     if (!note) throw new ConvexError('Note not found.');
     await ctx.storage.delete(note.sourceStorageId);
+    if (note.editorStorageId) await ctx.storage.delete(note.editorStorageId);
     await ctx.db.delete('notes', id);
   },
 });
@@ -96,12 +104,13 @@ export const publishedSource = internalQuery({
 
 export const readOwned = action({
   args: { id: v.string() },
-  handler: async (ctx, { id }): Promise<{ note: ReturnType<typeof summary>; source: string } | null> => {
+  handler: async (ctx, { id }): Promise<{ note: ReturnType<typeof summary>; source: string; blocks?: string } | null> => {
     const note = await ctx.runQuery(internal.notes.ownedSource, { id });
     if (!note) return null;
     const file = await ctx.storage.get(note.sourceStorageId);
     if (!file) throw new ConvexError('Note file is unavailable.');
-    return { note: summary(note), source: await file.text() };
+    const editorFile = note.editorStorageId ? await ctx.storage.get(note.editorStorageId) : null;
+    return { note: summary(note), source: await file.text(), ...(editorFile ? { blocks: await editorFile.text() } : {}) };
   },
 });
 
@@ -113,5 +122,59 @@ export const readPublished = action({
     const file = await ctx.storage.get(note.sourceStorageId);
     if (!file) throw new ConvexError('Note file is unavailable.');
     return { title: note.title, filename: note.filename, source: await file.text() };
+  },
+});
+
+// Recheck ownership, publication and revision atomically after the action stores files.
+export const commitDraft = internalMutation({
+  args: { id: v.optional(v.id('notes')), expectedUpdatedAt: v.optional(v.number()), sourceStorageId: v.id('_storage'), editorStorageId: v.id('_storage'), title: v.string() },
+  handler: async (ctx, args) => {
+    const ownerId = await requireOwner(ctx);
+    const now = Date.now();
+    if (args.id) {
+      const note = await owned(ctx, args.id);
+      if (!note) throw new ConvexError('Note not found.');
+      if (note.published) throw new ConvexError('Unpublish this note before editing it.');
+      if (note.updatedAt !== args.expectedUpdatedAt) throw new ConvexError('This note changed in another tab. Copy your changes before reloading.');
+      const updatedAt = Math.max(now, note.updatedAt + 1);
+      await ctx.db.patch('notes', args.id, { sourceStorageId: args.sourceStorageId, editorStorageId: args.editorStorageId, title: args.title, filename: note.filename.replace(/\.(mtex|mathtex)$/i, '.md'), updatedAt });
+      await ctx.storage.delete(note.sourceStorageId);
+      if (note.editorStorageId) await ctx.storage.delete(note.editorStorageId);
+      return { id: args.id, updatedAt };
+    }
+    const id = await ctx.db.insert('notes', { ownerId, title: args.title, filename: 'note.md', sourceStorageId: args.sourceStorageId, editorStorageId: args.editorStorageId, slug: '', published: false, createdAt: now, updatedAt: now });
+    await ctx.db.patch('notes', id, { slug: id });
+    return { id, updatedAt: now };
+  },
+});
+
+export const saveDraft = action({
+  args: { id: v.optional(v.id('notes')), expectedUpdatedAt: v.optional(v.number()), source: v.string(), blocks: v.string() },
+  handler: async (ctx, { id, expectedUpdatedAt, source, blocks }): Promise<{ id: Doc<'notes'>['_id']; updatedAt: number }> => {
+    await requireOwner(ctx);
+    let filename = 'Untitled note.md';
+    if (id) {
+      const note = await ctx.runQuery(internal.notes.ownedSource, { id });
+      if (!note) throw new ConvexError('Note not found.');
+      if (note.published) throw new ConvexError('Unpublish this note before editing it.');
+      filename = note.filename;
+    }
+    validateSource(source);
+    const sourceBlob = new Blob([source], { type: 'text/plain;charset=utf-8' });
+    const editorBlob = new Blob([blocks], { type: 'application/json' });
+    if (sourceBlob.size > MAX_NOTE_BYTES || editorBlob.size > MAX_NOTE_BYTES) throw new ConvexError('This note is too large. Keep the text and editor data under 2 MB each.');
+    let parsed: unknown;
+    try { parsed = JSON.parse(blocks); } catch { throw new ConvexError('Invalid editor content.'); }
+    if (!Array.isArray(parsed) || !parsed.length || parsed.some(block => !block || typeof block.type !== 'string')) throw new ConvexError('Invalid editor content.');
+    const sourceStorageId = await ctx.storage.store(sourceBlob);
+    let editorStorageId;
+    try {
+      editorStorageId = await ctx.storage.store(editorBlob);
+      return await ctx.runMutation(internal.notes.commitDraft, { id, expectedUpdatedAt, sourceStorageId, editorStorageId, title: sourceTitle(source, filename) });
+    } catch (error) {
+      await ctx.storage.delete(sourceStorageId);
+      if (editorStorageId) await ctx.storage.delete(editorStorageId);
+      throw error;
+    }
   },
 });

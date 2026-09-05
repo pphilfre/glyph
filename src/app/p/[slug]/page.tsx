@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { validSlug } from '@/lib/publish-url';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Shell } from '@/components/shell';
@@ -11,7 +12,7 @@ import { renderNote } from '@/lib/rendering';
 export const dynamic = 'force-dynamic';
 const publishedDocument = cache(async (slug: string) => {
   if (slug === 'test') return exampleNote();
-  if (!process.env.NEXT_PUBLIC_CONVEX_URL || !/^[a-z0-9]{20,64}$/.test(slug)) notFound();
+  if (!process.env.NEXT_PUBLIC_CONVEX_URL || !validSlug(slug)) notFound();
   const note = await fetchAction(api.notes.readPublished, { slug });
   if (!note) notFound();
   return renderNote(note.source, note.filename);

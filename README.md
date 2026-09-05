@@ -1,6 +1,6 @@
 # Glyph
 
-Upload Markdown and mathematical notes, preview them privately, and publish a clean, shareable page.
+Create notes in BlockNote or upload Markdown and mathematical notes, edit and preview them privately, then publish at a custom URL.
 
 ## Architecture
 
@@ -26,13 +26,14 @@ Commit `convex/_generated` alongside function changes; the checked-in bindings l
 
 ## Workflow and access
 
-Sign in → upload → private preview → publish → copy link.
+Sign in → create or upload → edit a private draft → save and preview → choose a URL → publish.
 
 - `/dashboard` lists only notes whose owner matches the verified Clerk subject.
 - Uploads go directly to an authenticated Convex HTTP action. It checks UTF-8 text, extension, and the 2 MB limit before storing a file, then calls an **internal** metadata mutation. Both derive the user from `ctx.auth.getUserIdentity()`; clients cannot provide owner IDs or attach arbitrary storage IDs.
-- `/notes/[id]` requires Clerk authentication and a matching owner in Convex.
-- Only owners can publish, unpublish, or delete. Delete removes the metadata and stored file.
-- `/p/[slug]` is intentionally public. Slugs use unique Convex note IDs. Both the public metadata query and source reader require `published === true`; private, missing, and deleted notes are unavailable.
+- `/notes/new` starts a blank BlockNote draft. Uploads open `/notes/[id]/edit`. Save draft keeps the note private; Save & preview opens the reader at `/notes/[id]`. All private routes require Clerk authentication and a matching owner in Convex.
+- Drafts store BlockNote JSON alongside Markdown for the reader. The first H1 is the title. Saves detect conflicting changes from another tab. Published notes must be unpublished before editing; saving never changes live content.
+- Only owners can publish, unpublish, or delete. Delete removes the metadata, source and editor files.
+- `/p/[slug]` is intentionally public. Choose a unique slug of 3–64 lowercase letters, numbers and single hyphens when publishing; `test` is reserved. Existing ID URLs remain supported. Slugs remain reserved while a note is unpublished. Changing a slug retires the old URL. Both the public metadata query and source reader require `published === true`; private, missing, and deleted notes are unavailable.
 - Next.js reads source content through Convex actions and renders it at request time. No permanent storage URL is issued. Unpublishing revokes subsequent public requests, including source reads; content already downloaded by a reader cannot be recalled.
 - `/p/test` is a labelled static example rendered by the same pipeline.
 
@@ -42,7 +43,7 @@ The upload endpoint uses bearer authentication, with CORS allowing explicit Auth
 
 Upload one UTF-8 `.md`, `.markdown`, `.mtex`, `.mathtex`, or `.tex` file, up to 2 MB. MathTeX uses the same Markdown syntax; a file beginning with a bare LaTeX math command and containing no dollar delimiters is treated as one display equation.
 
-LaTeX `.tex` imports are converted on the server and saved as `.md` notes before opening the private preview. The converter supports titles, section headings, paragraphs, bold/italic text, lists (including nested lists), quotes, inline code/verbatim blocks, links, footnotes as parenthetical text, and inline/display equations including equation, align and gather environments. Both the uploaded file and converted note must fit within 2 MB. Malformed groups/environments or excessive nesting return a helpful error without storing a note.
+LaTeX `.tex` imports are converted on the server and saved as `.md` notes before opening the private editor. The converter supports titles, section headings, paragraphs, bold/italic text, lists (including nested lists), quotes, inline code/verbatim blocks, links, footnotes as parenthetical text, and inline/display equations including equation, align and gather environments. Both the uploaded file and converted note must fit within 2 MB. Malformed groups/environments or excessive nesting return a helpful error without storing a note.
 
 Review the preview after conversion. Unsupported commands and environments (including tables, TikZ, custom macro definitions and references) are preserved as source with a conversion notice. Packages are not loaded, macros are not expanded, external files are not fetched, and document layout and automatic equation numbering are not reproduced. Keep your original `.tex` file for editing or compiling to PDF.
 

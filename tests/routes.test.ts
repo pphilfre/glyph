@@ -54,4 +54,10 @@ describe('Next.js private and public routes', () => {
     await expect(PublishedPage({ params: Promise.resolve({ slug: 'a'.repeat(32) }), searchParams: Promise.resolve({}) })).rejects.toThrow('NOT_FOUND');
     expect(mocks.render).not.toHaveBeenCalled();
   });
+
+  it('accepts a custom hyphenated publish URL', async () => {
+    mocks.fetchAction.mockResolvedValue({ filename: 'note.md', title: 'Note', source: '# Note' });
+    await PublishedPage({ params: Promise.resolve({ slug: 'my-notes' }), searchParams: Promise.resolve({}) });
+    expect(mocks.fetchAction).toHaveBeenCalledWith(api.notes.readPublished, { slug: 'my-notes' });
+  });
 });

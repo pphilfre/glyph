@@ -47,7 +47,7 @@ export function UploadNote() {
         const result = JSON.parse(xhr.responseText);
         if (xhr.status === 401) { fail('Sign in again to upload your note.'); router.push('/sign-in'); return; }
         if (xhr.status !== 201 || !result.id) { fail(result.error || 'The upload failed. Please try again.'); return; }
-        setStage('ready'); router.push(`/notes/${result.id}`); router.refresh();
+        setStage('ready'); router.push(`/notes/${result.id}/edit`); router.refresh();
       } catch { fail('The upload failed. Please try again.'); }
     };
     xhr.send(file);
@@ -60,10 +60,10 @@ export function UploadNote() {
       onDragLeave={event => { event.preventDefault(); if (--dragDepth.current <= 0) setDragging(false); }}
       onDrop={event => { event.preventDefault(); dragDepth.current = 0; setDragging(false); if (event.dataTransfer.files.length !== 1) { setError('Upload one note at a time.'); return; } void upload(event.dataTransfer.files[0]); }} aria-busy={busy}>
       <span className="upload-symbol">{busy ? <LoaderCircle className="spin" size={26} /> : <FileUp size={26} strokeWidth={1.5} />}</span>
-      <strong aria-live="polite">{stage === 'uploading' ? 'Uploading your note…' : stage === 'saving' ? 'Saving your note…' : stage === 'ready' ? 'Opening your preview…' : 'Drop your note here'}</strong>
+      <strong aria-live="polite">{stage === 'uploading' ? 'Uploading your note…' : stage === 'saving' ? 'Saving your note…' : stage === 'ready' ? 'Opening your editor…' : 'Drop your note here'}</strong>
       <span>{busy ? filename : 'Markdown, MathTeX or LaTeX (.tex), up to 2 MB'}</span>
       {busy ? <div className="processing-line"><span /></div> : <button disabled={!isAuthenticated} className="button primary" onClick={() => input.current?.click()}>{isLoading ? 'Connecting…' : 'Choose a file'} <ArrowUpRight size={16} /></button>}
-      <small>{busy ? 'Your private preview will open next.' : 'LaTeX files are converted into notes. Review any conversion notices in your preview.'}</small>
+      <small>{busy ? 'Your private draft will open in the editor next.' : 'LaTeX files are converted into notes. Edit your draft and review it before publishing.'}</small>
       {!isLoading && !isAuthenticated && <p role="alert">Your sign-in could not be verified. Reload the page to reconnect.</p>}
       <input ref={input} type="file" tabIndex={-1} accept=".md,.markdown,.mtex,.mathtex,.tex" aria-label="Choose a Markdown, MathTeX or LaTeX note" className="visually-hidden" disabled={busy || !isAuthenticated} onChange={event => { const file = event.target.files?.[0]; if (file) void upload(file); event.target.value = ''; }} />
     </div>
