@@ -79,9 +79,12 @@ Tests execute the Convex functions and HTTP upload flow with `convex-test`, cove
 
 ## Deployment
 
+On Vercel, use the Next.js preset and the build command `npx convex deploy --cmd 'npm run build'`. Leave the output directory at its default. Normal builds use Next.js's standard output so Vercel's adapter can package the deployment.
+
 Set the production Clerk issuer on the production Convex deployment, then run `pnpm exec convex deploy`. Build/deploy Next.js with the matching production Clerk publishable key and both Convex URLs; provide `CLERK_SECRET_KEY` at runtime. Public values are embedded at build time, so rebuild after changing them.
 
 Optional Docker hosting runs only Next.js:
 `docker compose --env-file .env.local up --build -d`.
+The Dockerfile sets `BUILD_STANDALONE=1` to produce its standalone server. Do not set this variable on Vercel: Next.js 16.3 adapter builds omit the server trace file required by standalone packaging.
 
 See [deployment instructions](docs/easypanel.md). Existing files in retired external services are not imported by this code change; re-upload source notes in the supported Markdown format.

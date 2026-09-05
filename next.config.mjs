@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
-  output: 'standalone',
+  // Docker needs a standalone server; Vercel's adapter packages its own output.
+  output: process.env.BUILD_STANDALONE === '1' ? 'standalone' : undefined,
 };
 
 export default config;
