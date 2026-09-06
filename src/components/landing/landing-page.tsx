@@ -102,7 +102,7 @@ export function LandingPage() {
           <div className={styles.storyCopy}>
             {steps.map((step, index) => <article id={step.id} key={step.id} className={styles.storyStep} data-story-step={index}>
               <div className={styles.stepNumber}><step.icon size={17} /><span> {['Write or import', 'Edit & preview', 'Publish & share'][index]}</span></div>
-              <h3>{step.title}</h3><p>{step.body}</p><div className={styles.stepDetail}>{step.detail}</div>
+              <h3>{step.title}</h3><p>{step.body}</p>
               {index === 2 && <Link href="/p/test" className={styles.inlineLink}>Explore a published note <ArrowUpRight size={15} /></Link>}
               <div className={styles.inlinePreview}><ProductPreview stage={index} /></div>
             </article>)}
