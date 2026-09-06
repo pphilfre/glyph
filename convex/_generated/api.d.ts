@@ -10,6 +10,7 @@
   
   import type { ApiFromModules, FilterApi, FunctionReference } from "convex/server";
   import type * as http from "../http.js";
+import type * as appearance from "../appearance.js";
 import type * as notes from "../notes.js";
 
   /**
@@ -23,6 +24,7 @@ import type * as notes from "../notes.js";
   declare const fullApi: ApiFromModules<{
     "http": typeof http,
 "notes": typeof notes,
+"appearance": typeof appearance,
   }>;
   export declare const api: FilterApi<typeof fullApi, FunctionReference<any, "public">>;
   export declare const internal: FilterApi<typeof fullApi, FunctionReference<any, "internal">>;

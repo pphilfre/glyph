@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { BookOpen, Files, Plus, LogIn } from 'lucide-react';
+import { BookOpen, Files, Plus, LogIn, Palette } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 
-export function Shell({ children, active, signedIn = false }: { children: React.ReactNode; active?: 'upload' | 'notes' | 'read'; signedIn?: boolean }) {
+export function Shell({ children, active, signedIn = false }: { children: React.ReactNode; active?: 'upload' | 'notes' | 'read' | 'appearance'; signedIn?: boolean }) {
   return <div className="app-shell">
     <a className="skip-link" href="#main-content">Skip to content</a>
     <aside className="rail" aria-label="Main navigation">
@@ -12,7 +12,7 @@ export function Shell({ children, active, signedIn = false }: { children: React.
         <Link href="/dashboard" className={`rail-link ${active === 'notes' ? 'active' : ''}`} aria-label="Your notes" title="Your notes"><Files size={20} /></Link>
         <Link href={active === 'read' ? '#main-content' : '/p/test'} className={`rail-link ${active === 'read' ? 'active' : ''}`} aria-label={active === 'read' ? 'Current note' : 'Read an example'} title={active === 'read' ? 'Current note' : 'Read an example'}><BookOpen size={19} /></Link>
       </nav>
-      <div className="rail-bottom">{signedIn ? <UserButton /> : <Link href="/sign-in" className="rail-link" aria-label="Sign in" title="Sign in"><LogIn size={19} /></Link>}</div>
+      <div className="rail-bottom"><Link href="/settings/appearance" className={`rail-link ${active === 'appearance' ? 'active' : ''}`} aria-label="Appearance settings" title="Appearance settings" aria-current={active === 'appearance' ? 'page' : undefined}><Palette size={19} /></Link>{signedIn ? <UserButton /> : <Link href="/sign-in" className="rail-link" aria-label="Sign in" title="Sign in"><LogIn size={19} /></Link>}</div>
     </aside>
     <div className="app-body">{children}</div>
   </div>;
