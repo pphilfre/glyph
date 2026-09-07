@@ -12,11 +12,11 @@ it('renders the account preference ahead of guest and stale browser choices', as
 });
 it('preserves pending local changes and retries them after a reload', async () => {
   mocks.cookies.set('glyph-appearance-owner', 'frost'); mocks.cookies.set('glyph-appearance-owner-pending', '1'); mocks.query.mockResolvedValue('canvas');
-  expect(await loadAppearance()).toMatchObject({ theme: 'frost', migrate: true });
+  expect(await loadAppearance()).toMatchObject({ theme: 'frost', migrate: false, syncPending: true });
 });
 it('uses a guest preference for a first-time account', async () => {
   mocks.cookies.set('glyph-appearance-guest', 'graphite'); mocks.query.mockResolvedValue(null);
-  expect(await loadAppearance()).toMatchObject({ theme: 'graphite', migrate: true });
+  expect(await loadAppearance()).toMatchObject({ theme: 'graphite', migrate: true, syncPending: false });
 });
 it('falls back safely on storage outages and ignores invalid cookie values', async () => {
   mocks.cookies.set('glyph-appearance-owner', '<script>'); mocks.query.mockRejectedValue(new Error('offline'));

@@ -20,7 +20,7 @@ export const viewport: Viewport = { colorScheme: 'light dark' };
 export const dynamic = 'force-dynamic';
 export default async function Layout({ children }: LayoutProps<'/'>) {
   const appearance = await loadAppearance();
-  const content = <ThemeProvider key={`${appearance.owner ?? "guest"}:${appearance.theme}`} initial={appearance.theme} owner={appearance.owner} unavailable={appearance.unavailable} migrate={appearance.migrate}>{children}</ThemeProvider>;
+  const content = <ThemeProvider key={`${appearance.owner ?? "guest"}:${appearance.theme}`} initial={appearance.theme} owner={appearance.owner} unavailable={appearance.unavailable} migrate={appearance.migrate} syncPending={appearance.syncPending}>{children}</ThemeProvider>;
   return <html data-theme={appearance.theme} lang="en" data-scroll-behavior="smooth" className={`${sans.variable} ${mono.variable}`}><body>
     {isAuthConfigured() ? <ClerkProvider appearance={{ variables: { colorBackground: "var(--raised)", colorNeutral: "var(--ink)", colorMuted: "var(--surface)", colorRing: "var(--accent)", colorShadow: "var(--shadow-color)", colorForeground: "var(--ink)", colorMutedForeground: "var(--muted)", colorPrimary: "var(--accent)", colorPrimaryForeground: "var(--on-accent)", colorInput: "var(--surface)", colorInputForeground: "var(--ink)", colorBorder: "var(--line)", colorDanger: "var(--danger)", colorSuccess: "var(--success)", colorModalBackdrop: "var(--overlay)" } }} signInUrl="/sign-in" signUpUrl="/sign-up" signInFallbackRedirectUrl="/dashboard" signUpFallbackRedirectUrl="/dashboard"><ConvexProvider>{content}</ConvexProvider></ClerkProvider> : content}
   </body></html>;

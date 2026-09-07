@@ -12,8 +12,8 @@ beforeEach(() => {
   for (const cookie of document.cookie.split(';')) document.cookie = cookie.split('=')[0] + '=; Max-Age=0; Path=/';
 });
 afterEach(async () => { await act(() => root.unmount()); vi.unstubAllGlobals(); });
-async function mount(owner: string | null = null, migrate = false) {
-  await act(() => root.render(createElement(ThemeProvider, { initial: 'canvas', owner, unavailable: false, migrate }, createElement(Probe))));
+async function mount(owner: string | null = null, migrate = false, initial: 'canvas' | 'midnight' | 'graphite' | 'sage' | 'frost' | 'system' = 'canvas', syncPending = false) {
+  await act(() => root.render(createElement(ThemeProvider, { initial, owner, unavailable: false, migrate, syncPending }, createElement(Probe))));
 }
 it('applies immediately and persists a signed-out preference without a network call', async () => {
   const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher);
@@ -49,7 +49,8 @@ it('keeps failed saves pending and allows retry', async () => {
 });
 it('adopts a first-time account preference', async () => {
   const fetcher = vi.fn().mockResolvedValue({ ok: true }); vi.stubGlobal('fetch', fetcher);
-  await mount('owner', true);
+  await mount('owner', true, 'graphite');
   expect(fetcher).toHaveBeenCalledTimes(1);
+  expect(JSON.parse(fetcher.mock.calls[0][1].body)).toEqual({ theme: 'graphite' });
   expect(appearance.status).toContain('Saved to your account');
 });
