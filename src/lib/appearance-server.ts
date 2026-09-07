@@ -11,11 +11,14 @@ export async function loadAppearance() {
   const guest = jar.get(themeCookie(null))?.value;
   let theme: ThemeId = isTheme(cached) ? cached : isTheme(guest) ? guest : 'canvas';
   let unavailable = false;
+  let migrate = false;
+  const pending = jar.get(`${themeCookie(owner)}-pending`)?.value === "1";
   if (owner) {
     try {
       const saved = await fetchQuery(api.appearance.get, {}, { token: await requireConvexToken() });
-      if (isTheme(saved)) theme = saved;
+      if (isTheme(saved) && !(pending && isTheme(cached))) theme = saved;
+      migrate = saved === null || (pending && isTheme(cached));
     } catch { unavailable = true; }
   }
-  return { owner, theme, unavailable };
+  return { owner, theme, unavailable, migrate };
 }

@@ -1,0 +1,11 @@
+# Appearance system
+
+Settings > Appearance (`/settings/appearance`) offers Canvas (default), Midnight, Graphite, Sage, Frost, and System. System uses Canvas or Midnight through a CSS media query, including before JavaScript and when the device preference changes. Reduced motion follows the operating system; no separate motion or density controls are introduced.
+
+`src/app/themes.css` defines semantic tokens for page, layered surfaces, sidebar, text, borders, accents, selection, buttons, status, charts, gradients, and shadows. The reader, editor, Clerk dialogs, and app controls share these tokens. The landing page retains its independent art direction. Add a theme to `src/lib/themes.ts` and provide the same CSS token contract. Do not duplicate component styles. Chart series must also have labels or distinct patterns when conveying data; colour alone is not sufficient.
+
+The root layout reads the authenticated Convex preference before rendering HTML. Browser cookies are scoped by account, with a separate guest preference. Existing account preferences win over guest choices. A first-time account adopts its current browser appearance. Local unsynced choices remain in an account-scoped pending cookie and retry on the next load. Saves are serialized, with instant local application and explicit retry feedback on failures. Cross-device changes appear on the next full page load; this is not live synchronization between open tabs.
+
+Deploy the `preferences` table and `convex/appearance.ts` functions to the matching Convex deployment before releasing the Next.js build (`pnpm exec convex deploy` in the configured deployment environment). They authenticate every read/write and derive ownership from the verified identity. No owner ID is accepted from callers. This workspace currently has no CONVEX_DEPLOYMENT configured, so live backend deployment must be performed in the configured deployment environment.
+
+Validation: run `npm run types:check`, `npm run lint`, `npm test`, and `npm run build`. Browser review should cover every preview at desktop/tablet/mobile widths, keyboard radio navigation, System under both OS modes, refresh persistence, auth transitions, and failure/retry. Published note images keep their original content; arbitrary embedded images cannot be recoloured safely.
