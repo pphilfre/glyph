@@ -4,6 +4,7 @@ import type { Id } from '../convex/_generated/dataModel';
 
 export function backend() {
   return convexTest({ schema, transactionLimits: true, modules: {
+    '../convex/appearance.ts': () => import('../convex/appearance'),
     '../convex/notes.ts': () => import('../convex/notes'),
     '../convex/http.ts': () => import('../convex/http'),
     '../convex/_generated/server.js': () => import('../convex/_generated/server'),
